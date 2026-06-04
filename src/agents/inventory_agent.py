@@ -1,6 +1,6 @@
 from langchain.agents import create_agent
 
-from config.settings import MODEL
+from llms.provider import get_model
 from prompts.system_prompt import SYSTEM_PROMPT
 from tools.inventory_tools import (
     check_inventory,
@@ -9,7 +9,7 @@ from tools.inventory_tools import (
 )
 
 agent = create_agent(
-    model=MODEL,
+    model=get_model(),
     tools=[
         check_inventory,
         consume_inventory,
