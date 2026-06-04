@@ -6,12 +6,16 @@ response = agent.invoke(
             {
                 "role": "user",
                 "content":
-                "How many apples are available?"
+                "We are getting low on milk."
             }
         ]
     }
 )
 
-print(response)
-print(50*"-")
-print(response["messages"][-1].content)
+for msg in response["messages"]:
+    print(50*"-")
+    print(msg)
+
+print(50*"=")
+print((response["messages"][-1].content)[0]["text"])
+# print((response["messages"][-1].content)[1]["text"])
