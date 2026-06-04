@@ -37,3 +37,27 @@ def replenish_inventory(
     save_inventory(inventory)
 
     return f"Added {amount} units to {product}"
+
+@tool
+def consume_inventory(
+    product: str,
+    amount: int
+) -> str:
+    """
+    consume inventory of a product.
+    Pass the product name (in singular form) and the amount to consume as arguments to consume the inventory for that product.
+    """
+
+    inventory = load_inventory()
+    current_qty = inventory.get(product)
+
+    if current_qty is None:
+        return f"{product} not found"
+    
+    if current_qty < amount:
+        return f"Not enough {product} in inventory. Current quantity: {current_qty}"
+    
+    inventory[product] = current_qty - amount
+    save_inventory(inventory)
+
+    return f"Consumed {amount} units of {product}"
