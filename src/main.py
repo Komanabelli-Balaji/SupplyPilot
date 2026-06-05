@@ -6,7 +6,7 @@ response = agent.invoke(
             {
                 "role": "user",
                 "content":
-                "We are getting low on milk."
+                "Check the inventory level of oranges and take necessary actions."
             }
         ]
     }
