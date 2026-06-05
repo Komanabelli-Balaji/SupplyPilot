@@ -1,5 +1,14 @@
 {
-    "apple": 120,
-    "banana": 40,
-    "milk": 15
+    "apple": {
+        "quantity": 120,
+        "reorder_point": 50
+    },
+    "banana": {
+        "quantity": 40,
+        "reorder_point": 30
+    },
+    "orange": {
+        "quantity": 100,
+        "reorder_point": 100
+    }
 }
