@@ -1,21 +1,30 @@
-from agents.inventory_agent import agent
+from graphs.inventory_graph import graph
 
-response = agent.invoke(
-    {
-        "messages": [
-            {
-                "role": "user",
-                "content":
-                "Check the inventory level of oranges and take necessary actions."
-            }
-        ]
+config = {
+    "configurable": {
+        "thread_id": "inventory-thread"
     }
-)
+}
 
-for msg in response["messages"]:
-    print(50*"-")
-    print(msg)
+while True:
+    query = input(">> ")
 
-print(50*"=")
-print((response["messages"][-1].content)[0]["text"])
-# print((response["messages"][-1].content)[1]["text"])
+    if query == "exit":
+        break
+
+    result = graph.invoke({
+            "messages": [(
+                "user",
+                query
+            )]
+        },
+        config=config
+    )
+
+    for msg in result["messages"]:
+        print(50*"-")
+        print(msg)
+
+    print(50*"=")
+    print((result["messages"][-1].content)[0]["text"])
+    # print((result["messages"][-1].content)[1]["text"])

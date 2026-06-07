@@ -5,6 +5,7 @@ from prompts.system_prompt import SYSTEM_PROMPT
 from tools.inventory_tools import (
     check_inventory,
     consume_inventory,
+    place_order,
     replenish_inventory
 )
 
@@ -13,6 +14,7 @@ agent = create_agent(
     tools=[
         check_inventory,
         consume_inventory,
+        place_order,
         replenish_inventory
     ],
     system_prompt=SYSTEM_PROMPT
