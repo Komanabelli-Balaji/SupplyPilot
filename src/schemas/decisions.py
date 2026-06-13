@@ -2,5 +2,5 @@ from pydantic import BaseModel
 
 
 class PlannerDecision(BaseModel):
-    quantity: int
-    reason: str
+    recommended_quantity: int
+    rationale: str

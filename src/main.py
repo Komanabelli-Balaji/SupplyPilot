@@ -29,14 +29,40 @@
 #     print((result["messages"][-1].content)[0]["text"])
 #     # print((result["messages"][-1].content)[1]["text"])
 
+from tools.planning_tools import inventory_analysis
+
+product = input("Enter product name: ")
+
+analysis = inventory_analysis.invoke(
+    {
+        "product": product
+    }
+)
+
+print(analysis)
+
+if not (
+    analysis["inventory"]
+    < analysis["reorder_point"]
+):
+    print("WAIT")
+    exit()
+
 from agents.planner import planner
+
+content = f"""
+Inventory Analysis object of product {product} is as follows:
+{analysis}
+Replenishment has already been determined to be necessary.
+Recommend an order quantity.
+"""
 
 response = planner.invoke(
     {
         "messages": [
             {
                 "role": "user",
-                "content": "Analyze apple inventory."
+                "content": content
             }
         ]
     }

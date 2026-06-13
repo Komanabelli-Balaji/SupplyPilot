@@ -7,9 +7,7 @@ from schemas.decisions import PlannerDecision
 
 planner = create_agent(
     model=get_model(),
-    tools=[
-        inventory_analysis
-    ],
+    tools=[],
     response_format=PlannerDecision,
     system_prompt=SYSTEM_PROMPT
 )

@@ -43,3 +43,14 @@ def inventory_analysis(product: str):
         "reorder_point": rop,
         "stockout_days": stockout
     }
+
+def needs_replenishment(analysis: dict):
+    """
+    Determine if replenishment is needed based on inventory analysis.
+    The argument is the output of inventory_analysis tool.
+    Output is a boolean indicating if inventory is below reorder point.
+    """
+    return (
+        analysis["inventory"]
+        < analysis["reorder_point"]
+    )
