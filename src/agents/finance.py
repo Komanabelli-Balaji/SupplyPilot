@@ -1,12 +1,12 @@
 from langchain.agents import create_agent
 
 from llms.provider import get_model
-from prompts.system_prompt import PLANNER_SYSTEM_PROMPT
+from prompts.system_prompt import FINANCE_SYSTEM_PROMPT
 from schemas.negotiation import AgentOpinion
 
-planner = create_agent(
+finance = create_agent(
     model=get_model(),
     tools=[],
     response_format=AgentOpinion,
-    system_prompt=PLANNER_SYSTEM_PROMPT
-)     
+    system_prompt=FINANCE_SYSTEM_PROMPT
+)
