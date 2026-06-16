@@ -1,4 +1,7 @@
+import json
+
 from tools.planning_tools import inventory_analysis
+from graphs.negotiation_graph import graph
 
 product = input("Enter product name: ")
 
@@ -17,38 +20,29 @@ if not (
     print("WAIT")
     exit()
 
-from negotiation import negotiate
+observation = json.dumps(
+    analysis,
+    indent=2
+)
 
-observation = f"""
-Inventory Analysis of product {product}:
+result = graph.invoke(
+    {
+        "observation": observation
+    }
+)
 
-{analysis}
+print()
+print("PLANNER")
+print(result["planner_opinion"])
 
-Replenishment required.
-"""
+print()
+print("PROCUREMENT")
+print(result["procurement_opinion"])
 
-opinions = negotiate(observation)
+print()
+print("FINANCE")
+print(result["finance_opinion"])
 
-for name, opinion in opinions.items():
-    print()
-    print(name.upper())
-    print(opinion)
-
-
-# response = planner.invoke(
-#     {
-#         "messages": [
-#             {
-#                 "role": "user",
-#                 "content": content
-#             }
-#         ]
-#     }
-# )
-
-# for msg in response["messages"]:
-#     print(50*"-")
-#     print(msg)
-
-# print(50*"=")
-# print(response["messages"][-1].content)
+print()
+print("FINAL DECISION")
+print(result["final_decision"])

@@ -38,6 +38,7 @@ def inventory_analysis(product: str):
     })
 
     return {
+        "product": product,
         "inventory": info["inventory"],
         "eoq": eoq,
         "reorder_point": rop,
