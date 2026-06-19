@@ -1,48 +1,28 @@
 import json
 
-from tools.planning_tools import inventory_analysis
-from graphs.negotiation_graph import graph
+from tools.scm_analysis import scm_analysis
+from graphs.scm_graph import graph
 
-product = input("Enter product name: ")
-
-analysis = inventory_analysis.invoke(
-    {
-        "product": product
-    }
-)
-
-print(analysis)
-
-if not (
-    analysis["inventory"]
-    < analysis["reorder_point"]
-):
-    print("WAIT")
-    exit()
-
-observation = json.dumps(
-    analysis,
-    indent=2
-)
+metrics = scm_analysis()
 
 result = graph.invoke(
     {
-        "observation": observation
+        "metrics": metrics
     }
 )
 
 print()
-print("PLANNER")
-print(result["planner_opinion"])
+print("RETAILER")
+print(result["retailer_decision"])
 
 print()
-print("PROCUREMENT")
-print(result["procurement_opinion"])
+print("DISTRIBUTOR")
+print(result["distributor_decision"])
 
 print()
-print("FINANCE")
-print(result["finance_opinion"])
+print("FACTORY")
+print(result["factory_decision"])
 
 print()
-print("FINAL DECISION")
+print("FINAL")
 print(result["final_decision"])

@@ -1,57 +1,71 @@
-from agents.planner import planner
-from agents.procurement import procurement
-from agents.finance import finance
+import json
+
+from agents.distributor import distributor
+from agents.factory import factory
+from agents.retailer import retailer
 from agents.supervisor import supervisor
 
-def planner_node(state):
-    response = planner.invoke({
+def retailer_node(state):
+    metrics_text = json.dumps(
+        state["metrics"],
+        indent=2
+    )
+    response = retailer.invoke({
         "messages": [{
             "role": "user",
-            "content": state["observation"]
+            "content": metrics_text
         }]
     })
 
     return {
-        "planner_opinion": response["structured_response"]
+        "retailer_decision": response["structured_response"].model_dump()
     }
 
-def procurement_node(state):
-    response = procurement.invoke({
+def distributor_node(state):
+    metrics_text = json.dumps(
+        state["metrics"],
+        indent=2
+    )
+    response = distributor.invoke({
         "messages": [{
             "role": "user",
-            "content": state["observation"]
+            "content": metrics_text
         }]
     })
 
     return {
-        "procurement_opinion": response["structured_response"]
+        "distributor_decision": response["structured_response"].model_dump()
     }
 
-def finance_node(state):
-    response = finance.invoke({
+def factory_node(state):
+    metrics_text = json.dumps(
+        state["metrics"],
+        indent=2
+    )
+    response = factory.invoke({
         "messages": [{
             "role": "user",
-            "content": state["observation"]
+            "content": metrics_text
         }]
     })
 
     return {
-        "finance_opinion": response["structured_response"]
+        "factory_decision": response["structured_response"].model_dump()
     }
 
 def supervisor_node(state):
 
     content = f"""
-Planner Recommendation:
-{state["planner_opinion"]}
+Retailer:
+{state["retailer_decision"]}
 
-Procurement Recommendation:
-{state["procurement_opinion"]}
+Distributor:
+{state["distributor_decision"]}
 
-Finance Recommendation:
-{state["finance_opinion"]}
+Factory:
+{state["factory_decision"]}
 
-Choose a final quantity.
+Find a consensus quantity.
 """
 
     response = supervisor.invoke({
@@ -62,5 +76,5 @@ Choose a final quantity.
     })
 
     return {
-        "final_decision": response["structured_response"]
+        "final_decision": response["structured_response"].model_dump()
     }

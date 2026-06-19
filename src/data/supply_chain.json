@@ -1,0 +1,25 @@
+{
+    "product": "orange",
+
+    "retailer": {
+        "inventory": 40,
+        "daily_demand": 15,
+        "reorder_point": 70
+    },
+
+    "distributor": {
+        "inventory": 600,
+        "lead_time": 3
+    },
+
+    "factory": {
+        "inventory": 5000,
+        "production_capacity": 350
+    },
+
+    "economics": {
+        "annual_demand": 3000,
+        "ordering_cost": 80,
+        "holding_cost": 1.5
+    }
+}

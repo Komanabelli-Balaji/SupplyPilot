@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 
-class PlannerDecision(BaseModel):
+class EchelonDecision(BaseModel):
     recommended_quantity: int
     rationale: str
