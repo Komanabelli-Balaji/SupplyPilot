@@ -6,14 +6,14 @@ from agents.retailer import retailer
 from agents.supervisor import supervisor
 
 def retailer_node(state):
-    metrics_text = json.dumps(
-        state["metrics"],
+    state_text = json.dumps(
+        state["retailer_state"],
         indent=2
     )
     response = retailer.invoke({
         "messages": [{
             "role": "user",
-            "content": metrics_text
+            "content": state_text
         }]
     })
 
@@ -22,14 +22,22 @@ def retailer_node(state):
     }
 
 def distributor_node(state):
-    metrics_text = json.dumps(
-        state["metrics"],
-        indent=2
-    )
+
+    content = f"""
+Distributor State:
+{json.dumps(
+    state["distributor_state"],
+    indent=2
+)}
+
+Retailer Request:
+{state["retailer_decision"]}
+"""
+    
     response = distributor.invoke({
         "messages": [{
             "role": "user",
-            "content": metrics_text
+            "content": content
         }]
     })
 
@@ -38,14 +46,22 @@ def distributor_node(state):
     }
 
 def factory_node(state):
-    metrics_text = json.dumps(
-        state["metrics"],
-        indent=2
-    )
+
+    content = f"""
+Factory State:
+{json.dumps(
+    state["factory_state"],
+    indent=2
+)}
+
+Distributor Proposal:
+{state["distributor_decision"]}
+"""
+
     response = factory.invoke({
         "messages": [{
             "role": "user",
-            "content": metrics_text
+            "content": content
         }]
     })
 

@@ -2,5 +2,5 @@ from pydantic import BaseModel
 
 
 class EchelonDecision(BaseModel):
-    recommended_quantity: int
+    quantity: int
     rationale: str

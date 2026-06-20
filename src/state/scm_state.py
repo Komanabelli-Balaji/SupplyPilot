@@ -2,7 +2,9 @@ from typing_extensions import TypedDict
 
 
 class SCMState(TypedDict):
-    metrics: dict
+    retailer_state: dict
+    distributor_state: dict
+    factory_state: dict
 
     retailer_decision: dict
     distributor_decision: dict

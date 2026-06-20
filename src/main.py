@@ -1,13 +1,30 @@
-import json
-
 from tools.scm_analysis import scm_analysis
 from graphs.scm_graph import graph
 
 metrics = scm_analysis()
 
+retailer_state = {
+    "inventory": metrics["inventory"],
+    "daily_demand": 15,
+    "reorder_point": metrics["reorder_point"],
+    "eoq": metrics["eoq"]
+}
+
+distributor_state = {
+    "inventory": metrics["distributor_inventory"],
+    "lead_time": metrics["lead_time"]
+}
+
+factory_state = {
+    "inventory": metrics["factory_inventory"],
+    "capacity": metrics["production_capacity"]
+}
+
 result = graph.invoke(
     {
-        "metrics": metrics
+        "retailer_state": retailer_state,
+        "distributor_state": distributor_state,
+        "factory_state": factory_state,
     }
 )
 
