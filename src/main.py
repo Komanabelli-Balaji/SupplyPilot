@@ -12,6 +12,7 @@ retailer_state = {
 
 distributor_state = {
     "inventory": metrics["distributor_inventory"],
+    "safety_stock": metrics["distributor_safety_stock"],
     "lead_time": metrics["lead_time"]
 }
 
@@ -39,6 +40,14 @@ print(result["distributor_decision"])
 print()
 print("FACTORY")
 print(result["factory_decision"])
+
+print()
+print("DISTRIBUTOR FINAL OFFER")
+print(result["distributor_final_offer"])
+
+print()
+print("RETAILER REVIEW")
+print(result["retailer_review"])
 
 print()
 print("FINAL")

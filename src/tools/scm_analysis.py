@@ -22,30 +22,15 @@ def scm_analysis():
     )
 
     return {
-        "product":
-            data["product"],
-
-        "inventory":
-            inventory,
-
-        "reorder_point":
-            retailer["reorder_point"],
-
-        "stockout_days":
-            round(stockout_days, 2),
-
-        "eoq":
-            round(eoq, 2),
-
-        "distributor_inventory":
-            distributor["inventory"],
-
-        "lead_time":
-            distributor["lead_time"],
-
-        "factory_inventory":
-            factory["inventory"],
-
-        "production_capacity":
-            factory["production_capacity"]
+        "product": data["product"],
+        "inventory": inventory,
+        "reorder_point": retailer["reorder_point"],
+        "stockout_days": round(stockout_days, 2),
+        "eoq": round(eoq, 2),
+        "distributor_inventory": distributor["inventory"],
+        "distributor_safety_stock": distributor["safety_stock"],
+        "lead_time": distributor["lead_time"],
+        "factory_inventory": factory["finished_goods_inventory"],
+        "factory_safety_stock": factory["safety_stock"],
+        "production_capacity": factory["production_capacity"]
     }

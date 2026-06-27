@@ -9,17 +9,19 @@
 
     "distributor": {
         "inventory": 600,
+        "safety_stock": 200,
         "lead_time": 3
     },
 
     "factory": {
-        "inventory": 5000,
+        "finished_goods_inventory": 5000,
+        "safety_stock": 1000,
         "production_capacity": 350
     },
 
     "economics": {
         "annual_demand": 3000,
         "ordering_cost": 80,
-        "holding_cost": 1.5
+        "holding_cost": 1500
     }
 }
