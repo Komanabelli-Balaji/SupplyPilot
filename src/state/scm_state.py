@@ -2,10 +2,6 @@ from typing_extensions import TypedDict
 
 
 class SCMState(TypedDict):
-    retailer_state: dict
-    distributor_state: dict
-    factory_state: dict
-
     retailer_decision: dict
     distributor_decision: dict
     factory_decision: dict
@@ -14,3 +10,7 @@ class SCMState(TypedDict):
     retailer_review: dict
     
     final_decision: dict
+
+    negotiation_round: int
+    max_rounds: int
+    consensus: bool
