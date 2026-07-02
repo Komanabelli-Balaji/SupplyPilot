@@ -109,8 +109,8 @@ def distributor_final_offer_node(state):
 
     distributor = state["distributor_decision"]
 
-    requested = distributor["requested_quantity"]
-    available = distributor["available_inventory"]
+    requested = distributor.get("requested_quantity", 0)
+    available = distributor.get("available_inventory", 0)
 
     factory_supply = 0
 
@@ -173,6 +173,77 @@ Return ReviewDecision.
             response["structured_response"].model_dump()
     }
 
+def distributor_revision_node(state):
+
+    factory_decision = state.get(
+        "factory_decision",
+        {
+            "quantity": 0,
+            "rationale": """
+                Factory was not involved because the distributor
+                could satisfy the order from local inventory.
+                """
+        }
+    )
+
+    prompt = f"""
+You are the Distributor.
+
+Original Retailer Request
+{json.dumps(state["retailer_decision"], indent=2)}
+
+Your Previous Offer
+{json.dumps(state["distributor_final_offer"], indent=2)}
+
+Retailer's Review
+{json.dumps(state["retailer_review"], indent=2)}
+
+Factory Constraints
+{json.dumps(factory_decision, indent=2)}
+
+The retailer has rejected your previous offer.
+
+Review the retailer's objections.
+
+You may use your tools again if you need to re-evaluate
+inventory availability or shortage after revising your offer.
+
+Do not invent inventory values.
+Base your revised proposal only on tool outputs.
+
+If you can improve your offer while respecting
+your own inventory constraints and the factory's
+constraints, do so.
+
+Otherwise explain clearly why no better offer is
+possible.
+
+Return DistributorDecision.
+"""
+
+    response = distributor.invoke(
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        }
+    )
+
+    decision = state["distributor_decision"].copy()
+    decision.update(
+        response["structured_response"].model_dump(
+            exclude_unset=True
+        )
+    )
+
+    return {
+        "distributor_decision": decision,
+        "negotiation_round":
+            state["negotiation_round"] + 1
+    }
 
 def supervisor_node(state):
 
