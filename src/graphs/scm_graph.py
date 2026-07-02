@@ -10,6 +10,12 @@ from negotiation.nodes import (
     retailer_review_node
 )
 
+def distributor_route(state):
+    if state["distributor_decision"]["shortage"] > 0:
+        return "factory"
+
+    return "offer"
+
 builder = StateGraph(SCMState)
 
 builder.add_node("retailer", retailer_node)
@@ -21,7 +27,16 @@ builder.add_node("supervisor", supervisor_node)
 
 builder.add_edge(START, "retailer")
 builder.add_edge("retailer", "distributor")
-builder.add_edge("distributor", "factory")
+
+builder.add_conditional_edges(
+    "distributor",
+    distributor_route,
+    {
+        "factory": "factory",
+        "offer": "distributor_offer"
+    }
+)
+
 builder.add_edge("factory", "distributor_offer")
 builder.add_edge("distributor_offer", "retailer_review")
 builder.add_edge("retailer_review", "supervisor")
