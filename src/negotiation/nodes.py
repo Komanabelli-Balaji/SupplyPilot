@@ -6,6 +6,8 @@ from agents.factory import factory
 from agents.retailer_review import retailer_review
 from agents.supervisor import supervisor
 
+from tools.inventory_math import calculate_shortage
+
 
 def retailer_node(state):
 
@@ -13,19 +15,17 @@ def retailer_node(state):
 Determine your replenishment decision.
 Use your tools before making a decision.
 
-Return EchelonDecision.
+Return RetailerDecision.
 """
 
-    response = retailer.invoke(
+    messages = [
         {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": content
-                }
-            ]
+            "role": "user",
+            "content": content
         }
-    )
+    ]
+
+    response = retailer.invoke(messages=messages)
 
     return {
         "retailer_decision":
@@ -50,19 +50,17 @@ Use your tools to
 Do not assume any values.
 Use your tools.
 
-Return EchelonDecision.
+Return DistributorDecision.
 """
 
-    response = distributor.invoke(
+    messages = [
         {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            "role": "user",
+            "content": prompt
         }
-    )
+    ]
+
+    response = distributor.invoke(messages)
 
     return {
         "distributor_decision":
@@ -85,19 +83,17 @@ Use your tools to inspect
 
 Determine how many units you can supply.
 
-Return EchelonDecision.
+Return FactoryDecision.
 """
 
-    response = factory.invoke(
+    messages = [
         {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            "role": "user",
+            "content": prompt
         }
-    )
+    ]
+
+    response = factory.invoke(messages)
 
     return {
         "factory_decision":
@@ -157,16 +153,13 @@ Accept only if it is reasonable from the retailer's perspective.
 Return ReviewDecision.
 """
 
-    response = retailer_review.invoke(
+    messages = [
         {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            "role": "user",
+            "content": prompt
         }
-    )
+    ]
+    response = retailer_review.invoke(messages)
 
     return {
         "retailer_review":
@@ -221,16 +214,13 @@ possible.
 Return DistributorDecision.
 """
 
-    response = distributor.invoke(
+    messages = [
         {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            "role": "user",
+            "content": prompt
         }
-    )
+    ]
+    response = distributor.invoke(messages)
 
     decision = state["distributor_decision"].copy()
     decision.update(
@@ -239,10 +229,63 @@ Return DistributorDecision.
         )
     )
 
+    available = decision["available_inventory"]
+
+    shortage = calculate_shortage.invoke(
+        {
+            "requested_quantity": decision["quantity"],
+            "available_inventory": available
+        }
+    )
+
+    decision["requested_quantity"] = decision["quantity"]
+    decision["shortage"] = shortage
+
     return {
         "distributor_decision": decision,
         "negotiation_round":
             state["negotiation_round"] + 1
+    }
+
+def factory_revision_node(state):
+
+    prompt = f"""
+Previous Factory Decision
+{json.dumps(state["factory_decision"], indent=2)}
+
+Revised Distributor Decision
+{json.dumps(state["distributor_decision"], indent=2)}
+
+You are the Factory.
+
+The distributor has revised its request after
+negotiation with the retailer.
+
+Use your tools to inspect
+- finished goods inventory
+- safety stock
+- production capacity
+
+Determine whether you can improve your previous offer.
+If you can supply more, revise your quantity.
+
+Otherwise explain why your previous offer is still
+the best feasible offer.
+
+Return FactoryDecision.
+"""
+
+    messages = [
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ]
+    response = factory.invoke(messages)
+
+    return {
+        "factory_decision":
+            response["structured_response"].model_dump()
     }
 
 def supervisor_node(state):
@@ -280,16 +323,13 @@ Do not invent a new quantity.
 Return FinalDecision.
 """
 
-    response = supervisor.invoke(
+    messages = [
         {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            "role": "user",
+            "content": prompt
         }
-    )
+    ]
+    response = supervisor.invoke(messages)
 
     return {
         "final_decision":
