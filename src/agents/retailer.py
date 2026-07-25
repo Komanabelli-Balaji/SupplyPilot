@@ -1,6 +1,6 @@
 from langchain.agents import create_agent
 
-from llms.provider import get_model
+from llms.provider import Provider
 from prompts.system_prompt import RETAILER_SYSTEM_PROMPT
 from schemas.retailer_decision import RetailerDecision
 from tools.retailer_tools import get_retailer_state
@@ -10,8 +10,7 @@ from tools.inventory_math import (
     calculate_stockout_days
 )
 
-retailer = create_agent(
-    model=get_model(),
+retailer = Provider(
     tools=[
         get_retailer_state,
         calculate_eoq,
