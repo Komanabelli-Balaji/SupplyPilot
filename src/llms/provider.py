@@ -46,9 +46,10 @@ class Provider:
             try:
                 print(f"\nUsing {MODEL}")
 
-                return self.primary_agent.invoke(
+                response = self.primary_agent.invoke(
                     {"messages": messages}
                 )
+                return response["structured_response"]
 
             except ChatGoogleGenerativeAIError as e:
                 if "RESOURCE_EXHAUSTED" in str(e):
@@ -66,9 +67,10 @@ class Provider:
             try:
                 print(f"\nUsing {FALLBACK_MODEL}")
 
-                return self.fallback_agent.invoke(
+                response = self.fallback_agent.invoke(
                     {"messages": messages}
                 )
+                return response["structured_response"]
 
             except ChatGoogleGenerativeAIError as e:
                 if "RESOURCE_EXHAUSTED" in str(e):
