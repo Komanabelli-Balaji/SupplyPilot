@@ -1,16 +1,18 @@
-from langchain.agents import create_agent
-
 from llms.provider import Provider
 from prompts.system_prompt import FACTORY_SYSTEM_PROMPT
-from schemas.factory_decision import FactoryDecision
-from tools.factory_tools import get_factory_state
-from tools.inventory_math import calculate_factory_supply
+from schemas.negotiation import NegotiationProposal
+from tools.capacity_tools import get_overtime_capacity, get_regular_capacity
+from tools.economics_tools import get_factory_production_cost, get_factory_selling_price
+from tools.inventory_tools import get_inventory
 
 factory = Provider(
     tools=[
-        get_factory_state,
-        calculate_factory_supply
+        get_inventory,
+        get_regular_capacity,
+        get_overtime_capacity,
+        get_factory_production_cost,
+        get_factory_selling_price,
     ],
-    response_format=FactoryDecision,
+    response_format=NegotiationProposal,
     system_prompt=FACTORY_SYSTEM_PROMPT
 )
