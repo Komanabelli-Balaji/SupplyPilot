@@ -1,27 +1,35 @@
 {
-    "product": "orange",
-
-    "retailer": {
-        "inventory": 40,
-        "daily_demand": 15,
-        "reorder_point": 70
-    },
-
-    "distributor": {
-        "inventory": 600,
-        "safety_stock": 200,
-        "lead_time": 3
-    },
-
-    "factory": {
-        "finished_goods_inventory": 5000,
-        "safety_stock": 1000,
-        "production_capacity": 350
-    },
-
     "economics": {
         "annual_demand": 3000,
         "ordering_cost": 80,
-        "holding_cost": 1500
+        "holding_cost": 1.5,
+
+        "retailer_shortage_cost": 45,
+        "distributor_shortage_cost": 25,
+
+        "factory_production_cost": 8,
+        "factory_inventory_cost": 2,
+        "factory_selling_price": 12,
+
+        "distributor_purchase_price": 12,
+        "distributor_selling_price": 18,
+
+        "retailer_selling_price": 28
+    },
+
+    "inventory": {
+        "retailer": 120,
+        "distributor": 500,
+        "factory": 1000
+    },
+
+    "capacity": {
+        "regular_production": 600,
+        "overtime_production": 200
+    },
+
+    "demand": {
+        "current": 150,
+        "forecast": 180
     }
 }
