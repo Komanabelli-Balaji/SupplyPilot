@@ -1,10 +1,10 @@
 import time
 
-from langchain_google_genai.chat_models import ChatGoogleGenerativeAIError
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
+from langchain_google_genai.chat_models import ChatGoogleGenerativeAIError
 
-from config.settings import MODEL, FALLBACK_MODEL
+from config.settings import FALLBACK_MODEL, MODEL
 
 
 class Provider:
@@ -18,26 +18,34 @@ class Provider:
     ):
 
         self.retry_delay = retry_delay
+        self.system_prompt = system_prompt
+        self.tools = tools
         self.response_format = response_format
 
         self.primary_model = init_chat_model(MODEL)
         self.fallback_model = init_chat_model(FALLBACK_MODEL)
 
-        self.primary_agent = create_agent(
-            model=self.primary_model,
-            tools=tools,
-            system_prompt=system_prompt,
-            response_format=response_format
-        )
-
-        self.fallback_agent = create_agent(
-            model=self.fallback_model,
-            tools=tools,
-            system_prompt=system_prompt,
-            response_format=response_format
+    def _build_agent(self, model, response_format):
+        return create_agent(
+            model=model,
+            tools=self.tools,
+            system_prompt=self.system_prompt,
+            response_format=response_format,
         )
 
     def invoke(self, messages):
+        return self.invoke_with_schema(
+            messages=messages,
+            response_format=self.response_format,
+        )
+
+    def invoke_with_schema(
+        self,
+        messages,
+        response_format
+    ):
+        primary_agent = self._build_agent(self.primary_model, response_format)
+        fallback_agent = self._build_agent(self.fallback_model, response_format)
 
         while True:
 
@@ -46,7 +54,7 @@ class Provider:
             try:
                 print(f"\nUsing {MODEL}")
 
-                response = self.primary_agent.invoke(
+                response = primary_agent.invoke(
                     {"messages": messages}
                 )
                 return response["structured_response"]
@@ -60,14 +68,14 @@ class Provider:
                     print("=" * 60)
 
                 else:
-                    raise e
+                    raise
 
             # ---------- FALLBACK ----------
 
             try:
                 print(f"\nUsing {FALLBACK_MODEL}")
 
-                response = self.fallback_agent.invoke(
+                response = fallback_agent.invoke(
                     {"messages": messages}
                 )
                 return response["structured_response"]
@@ -80,6 +88,6 @@ class Provider:
                     print(f"Retrying in {self.retry_delay} seconds...")
                     print("=" * 60)
                 else:
-                    raise e
+                    raise
 
                 time.sleep(self.retry_delay)
