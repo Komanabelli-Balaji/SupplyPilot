@@ -17,6 +17,10 @@ class SupplyChainMetrics(BaseModel):
     service_level: float
     bullwhip_ratio: float
 
+    retailer_eoq: int
+    distributor_eoq: int
+    factory_eoq: int
+
     customer_demand: int
     retailer_order: int
     factory_supply: int
