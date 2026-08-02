@@ -1,25 +1,61 @@
 import json
 from pathlib import Path
 
-from agents.distributor import distributor
+from agents.distributor_df import distributor_df
+from agents.distributor_rd import distributor_rd
 from agents.factory import factory
 from agents.retailer import retailer
 from negotiation.engine import NegotiationEngine
 from negotiation.prompts import build_messages
 from negotiation.settlement import settlement
 from schemas.factory_offer import FactoryExecutionPlan
+from state.scm_state import SCMState
 
 
-def retailer_distributor_node(state):
+def customer_retailer_node(state: SCMState):
+    print("===== Customer → Retailer =====")
+
+    env = state["env"]
+
+    demand = env.generate_customer_demand()
+    inventory = env.get_inventory("Retailer")
+
+    served = min(inventory, demand)
+
+    env.remove_inventory(
+        "Retailer",
+        served,
+    )
+
+    remaining_inventory = env.get_inventory("Retailer")
+    reorder_point = env.retailer_reorder_point()
+
+    print(f"Demand: {demand}")
+    print(f"Served: {served}")
+    print(f"Remaining Inventory: {remaining_inventory}")
+
+    return {
+        "customer_demand": demand,
+        "customer_served": served,
+        "skip_retailer_negotiation": (
+            remaining_inventory > reorder_point
+        ),
+    }
+
+def retailer_distributor_node(state: SCMState):
     print("===== Retailer ↔ Distributor =====")
 
     engine = NegotiationEngine(
         initiator=retailer,
-        responder=distributor,
+        responder=distributor_rd,
         initiator_role="Retailer",
         responder_role="Distributor",
         initiator_prompt="""
 You are the Retailer.
+
+This is the first proposal.
+There is no previous proposal to accept.
+Set accepted = false.
 
 Use your tools.
 Determine your desired replenishment quantity and unit price.
@@ -28,6 +64,12 @@ Negotiate until an agreement is reached or the maximum number of rounds is excee
 """,
         responder_prompt="""
 You are the Distributor.
+
+If you agree with the previous proposal,
+set accepted = true and repeat the agreed quantity.
+
+Otherwise,
+set accepted = false and provide a counter proposal.
 
 Use your tools.
 Evaluate the retailer proposal and make a counter proposal if necessary.
@@ -49,45 +91,83 @@ Evaluate the retailer proposal and make a counter proposal if necessary.
         f"Agreed quantity: {result.agreed_quantity}"
     )
 
+    env = state["env"]
+    env.set_pending_retailer_order(result.agreed_quantity)
+
     return {
         "rd_result": result,
     }
 
 
-def distributor_factory_node(state):
+def distributor_factory_node(state: SCMState):
     print("===== Distributor ↔ Factory =====")
+    
+    env = state["env"]
 
-    rd = state["rd_result"]
+    inventory = env.get_inventory("Distributor")
+    retailer_order = state["rd_result"].agreed_quantity
+
+    remaining_inventory = inventory - retailer_order
+    reorder_point = env.distributor_reorder_point()
+
+    if remaining_inventory > reorder_point:
+        return {
+            "df_result": None,
+            "factory_plan": None,
+        }
+
+    required_quantity = env.distributor_eoq()
 
     engine = NegotiationEngine(
-        initiator=distributor,
+        initiator=distributor_df,
         responder=factory,
         initiator_role="Distributor",
         responder_role="Factory",
         initiator_prompt=f"""
-The retailer-distributor negotiation has completed.
+Retailer-distributor negotiation has completed.
 
-Agreed Quantity:
-{rd.agreed_quantity}
+Current distributor inventory:
+{remaining_inventory}
 
-Negotiate ONLY the quantity.
+Distributor reorder point:
+{reorder_point}
 
+Desired replenishment quantity (EOQ):
+{required_quantity}
+
+This is the first proposal to factory.
+There is no previous proposal to accept.
+Set accepted = false.
+
+Negotiate ONLY this replenishment quantity.
 Prices are fixed.
-Use your tools.
 """,
         responder_prompt="""
 You are the Factory.
 
+If you agree with the previous proposal,
+set accepted = true and repeat the agreed quantity.
+
+Otherwise,
+set accepted = false and provide a counter proposal.
+
 Negotiate ONLY quantity.
+Before responding, consult your tools for:
+
+- current inventory
+- factory inventory policy
+- production capacities
+- factory economics
 
 Consider:
 
-- inventory
-- production capacity
-- overtime production
-- lead time
+- current finished-goods inventory
+- regular production capacity
+- overtime production capacity
 
-Prices are fixed.
+Do not negotiate prices.
+Counter only when the requested quantity is infeasible or economically unreasonable.
+Return ONLY the required schema.
 """,
     )
 
@@ -109,10 +189,32 @@ Prices are fixed.
             f"""
 Generate a FactoryExecutionPlan.
 
-The negotiated quantity is:
-{result.agreed_quantity}
+Distributor replenishment request:
+{required_quantity}
 
-Return ONLY the execution plan.
+Follow this production policy.
+
+Step 1
+Ship as much as possible from finished-goods inventory.
+
+Step 2
+If additional units are required, use regular production.
+
+Step 3
+If regular production is insufficient, use overtime production.
+
+Step 4
+After today's shipment, evaluate the remaining factory inventory.
+
+If the remaining inventory is below the reorder point, use any remaining production capacity to replenish inventory toward the EOQ.
+
+Never exceed:
+
+- finished-goods inventory
+- regular production capacity
+- overtime production capacity
+
+Return ONLY the FactoryExecutionPlan.
 """,
             [],
         ),
@@ -129,7 +231,7 @@ Return ONLY the execution plan.
         "factory_plan": plan,
     }
 
-def settlement_node(state):
+def settlement_node(state: SCMState):
     print("===== Settlement =====")
 
     result = settlement(state)
@@ -144,7 +246,16 @@ def settlement_node(state):
     }
 
 
-def needs_factory(state) -> str:
+# Routing functions
+
+def needs_retailer_negotiation(state: SCMState) -> str:
+
+    if state["skip_retailer_negotiation"]:
+        return "settlement"
+
+    return "retailer"
+
+def needs_factory(state: SCMState) -> str:
     """
     Determines whether the distributor should negotiate with the factory.
 
@@ -154,12 +265,14 @@ def needs_factory(state) -> str:
     """
 
     env = state["env"]
-    rd = state["rd_result"]
 
-    requested = rd.agreed_quantity
-    available = env.get_inventory("Distributor")
+    inventory = env.get_inventory("Distributor")
+    retailer_order = state["rd_result"].agreed_quantity
 
-    if requested > available:
+    remaining_inventory = inventory - retailer_order
+    reorder_point = env.distributor_reorder_point()
+
+    if remaining_inventory <= reorder_point:
         return "factory"
 
     return "settlement"
