@@ -38,9 +38,8 @@ class NegotiationEngine:
     ) -> bool:
 
         return (
-            first.accepted
-            and second.accepted
-            and first.proposed_quantity == second.proposed_quantity
+            second.accepted and
+            first.proposed_quantity == second.proposed_quantity
         )
 
 
